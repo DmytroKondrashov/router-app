@@ -41,7 +41,4 @@ function sendEvents(eventData, destinations) {
   });
 }
 
-// Start the Express server
-app.listen(port, () => {
-  console.log(`Server is listening on port ${port}`);
-});
+module.exports = app;
