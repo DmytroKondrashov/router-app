@@ -1,7 +1,15 @@
 const express = require('express');
-  const router = express.Router();
-  const verifyToken = require('../middleware/authMiddleware');
+const router = express.Router();
+const verifyToken = require('../middleware/authMiddleware');
 
+// Sample destinations config
+const destinationsConfig = {
+  strategy: 'custom', // Default routing strategy
+  destinations: {
+    custom: ['http://destination1.com', 'http://destination2.com'],
+    fallback: 'http://fallback.com',
+  }
+};
 
 // Function to send events to destinations
 function sendEvents(eventData, destinations) {

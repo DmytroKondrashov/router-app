@@ -11,13 +11,4 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/events', eventsRoute);
 
-// Sample destinations config
-const destinationsConfig = {
-  strategy: 'custom', // Default routing strategy
-  destinations: {
-    custom: ['http://destination1.com', 'http://destination2.com'],
-    fallback: 'http://fallback.com',
-  }
-};
-
 module.exports = app;
