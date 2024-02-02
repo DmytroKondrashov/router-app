@@ -377,6 +377,11 @@ etag@~1.8.1:
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==
 
+express-list-endpoints@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/express-list-endpoints/-/express-list-endpoints-6.0.0.tgz#903f000b0cc954bbc35ca44e7aa3917e5292d0c2"
+  integrity sha512-1I30bSVego+AU/eSsX/bV2xrOXW5tFhsuXZp7wZd9396bAAxH7KHaAwLXQYra0Aw33xA67HmNiceGf2SOvXaLg==
+
 express-session@^1.18.0:
   version "1.18.0"
   resolved "https://registry.yarnpkg.com/express-session/-/express-session-1.18.0.tgz#a6ae39d9091f2efba5f20fc5c65a3ce7c9ce16a3"

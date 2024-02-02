@@ -10,6 +10,7 @@
     "debug": "~2.6.9",
     "dotenv": "^16.4.1",
     "express": "~4.16.1",
+    "express-list-endpoints": "^6.0.0",
     "express-session": "^1.18.0",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
