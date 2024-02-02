@@ -2,6 +2,27 @@ const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middleware/authMiddleware');
 
+const destinationsDictionary = [
+  {
+    name: 'destination1',
+    transport: 'http.post',
+    url: 'https://example.com/destination1',
+  },
+  {
+    name: 'destination2',
+    transport: 'http.post',
+    url: 'https://example2.com/destination2',
+  },
+  {
+    name: 'destination3',
+    transport: 'console.log'
+  },
+  {
+    name: 'destination4',
+    transport: 'console.warn'
+  },
+]
+
 // Sample destinations config
 const destinationsConfig = {
   strategy: 'custom', // Default routing strategy
