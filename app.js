@@ -1,12 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/auth');
 const eventsRoute = require('./routes/events');
 require('dotenv').config();
 
 const app = express();
-const port = 3000;
 
 app.use(bodyParser.json());
 app.use(express.json());
