@@ -6,9 +6,7 @@ const express = require('express');
 // Function to send events to destinations
 function sendEvents(eventData, destinations) {
   destinations.forEach((destination) => {
-    // Implement logic to send events (e.g., using HTTP requests)
-    // You might want to use a library like axios for making HTTP requests
-    // Example: axios.post(destination, eventData);
+    //TODO Implement logic to send events (e.g., using HTTP requests)
     console.log(`Sending event to ${destination}`);
   });
 }
