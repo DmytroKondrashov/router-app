@@ -2,54 +2,153 @@ const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middleware/authMiddleware');
 
-const destinationsDictionary = [
-  {
-    name: 'destination1',
-    transport: 'http.post',
-    url: 'https://example.com/destination1',
-  },
-  {
-    name: 'destination2',
-    transport: 'http.post',
-    url: 'https://example2.com/destination2',
-  },
-  {
-    name: 'destination3',
-    transport: 'console.log'
-  },
-  {
-    name: 'destination4',
-    transport: 'console.warn'
-  },
-]
-
 // Sample destinations config
 const destinationsConfig = {
-  strategy: 'custom', // Default routing strategy
-  destinations: {
-    custom: ['http://destination1.com', 'http://destination2.com'],
-    fallback: 'http://fallback.com',
-  }
+  strategy: 'ALL', // Default routing strategy
+  destinations: [
+    {
+      name: 'destination1',
+      transport: 'http.post',
+      url: 'https://example.com/destination1',
+    },
+    {
+      name: 'destination2',
+      transport: 'http.post',
+      url: 'https://example2.com/destination2',
+    },
+    {
+      name: 'destination3',
+      transport: 'console.log'
+    },
+    {
+      name: 'destination4',
+      transport: 'console.warn'
+    },
+  ]
 };
 
 // Function to send events to destinations
-function sendEvents(eventData, destinations) {
+function sendEvents(eventData, destination) {
   destinations.forEach((destination) => {
     //TODO Implement logic to send events (e.g., using HTTP requests)
     console.log(`Sending event to ${destination}`);
   });
 }
 
+function getUniqueDestinations(possibleDestinations) {
+  const uniqueDestinations = [];
+
+  possibleDestinations.forEach((destination) => {
+    Object.entries(destination).forEach(([key, value]) => {
+      // Check if the key already exists in uniqueDestinations
+      const existingKey = uniqueDestinations.find((pair) => Object.keys(pair)[0] === key);
+
+      if (!existingKey ) {
+        uniqueDestinations.push({ [key]: [value] });
+      } else {
+        const element = uniqueDestinations.find(obj => key in obj);
+        element[key].push(value);
+      }
+    });
+  });
+
+  return uniqueDestinations;
+}
+
+function parseStrategyFunctionString(routingStrategy) {
+  const match = routingStrategy.match(/^function\s*\(([^)]*)\)\s*{\s*([\s\S]*)\s*}$/);
+
+  if (!match) {
+    throw new Error('Invalid function string');
+  }
+
+  const args = match[1].split(',').map(arg => arg.trim());
+
+  if (args.length !== 1) {
+    throw new Error('Please provide a function with exactly one argument');
+  }
+
+  const body = match[2].trim();
+
+  return new Function(args, body);
+}
+
+function selectDestinationsForRouting(uniqueDestinations, routingStrategy) {
+  const destinationsForRouting = {};
+
+  switch (routingStrategy) {
+    case "ALL":
+      uniqueDestinations.forEach((destination) => {
+        Object.entries(destination).forEach(([key, value]) => {
+          let falseIntents = 0;
+          value.forEach(el => {
+            if (el == false) {
+              falseIntents += 1;
+            }
+          })
+          if (falseIntents === 0 && !destinationsForRouting[key]) {
+            destinationsForRouting[key] = true;
+          }
+          if (falseIntents > 0 && !destinationsForRouting[key]) {
+            destinationsForRouting[key] = false;
+          }
+        });
+      });
+      return destinationsForRouting;
+    
+    case "ANY":
+      uniqueDestinations.forEach((destination) => {
+        console.log(destination)
+        Object.entries(destination).forEach(([key, value]) => {
+          let trueIntents = 0;
+          value.forEach(el => {
+            if (el == true) {
+              trueIntents += 1;
+            }
+          })
+          if (trueIntents > 0 && !destinationsForRouting[key]) {
+            destinationsForRouting[key] = true;
+          }
+          if (trueIntents < 1 && !destinationsForRouting[key]) {
+            destinationsForRouting[key] = false;
+          }
+        });
+      });
+      return destinationsForRouting;
+
+    default:
+      const strategyFunction = parseStrategyFunctionString(routingStrategy);
+      const strategyFunctionResult = strategyFunction();
+      if (strategyFunctionResult != true && strategyFunctionResult != false) {
+        throw new Error('Please provide a function that retrurns a boolean value');
+      }
+      uniqueDestinations.forEach((obj) => {
+        const key = Object.keys(obj)[0];
+        if (!destinationsForRouting[key]) {
+          destinationsForRouting[key] = strategyFunctionResult;
+        }
+      })
+      return destinationsForRouting;
+  }
+}
+
 // Protected route
-  router.get('/', verifyToken, (req, res) => {
+router.get('/', verifyToken, (req, res) => {
+
+  const payload = req.body.payload;
+
   // Determine routing strategy
-  const routingStrategy = req.query.strategy || destinationsConfig.strategy;
+  const routingStrategy = req.body.strategy || destinationsConfig.strategy;
 
   // Determine destinations based on strategy
-  const destinations = destinationsConfig.destinations[routingStrategy] || destinationsConfig.destinations.fallback;
-
+  const possibleDestinations = req.body.possibleDestinations;
+  const uniqueDestinations = getUniqueDestinations(possibleDestinations);
+  const destinationsSelectedForRouting = selectDestinationsForRouting(uniqueDestinations, routingStrategy);
+  console.log("==========================================")
+  console.log(destinationsSelectedForRouting)
+  console.log("==========================================")
    // Send events to destinations
-  sendEvents(eventData, destinations);
+  sendEvents(payload, destinations);
 
   res.status(200).json('Event received successfully.');
 });
