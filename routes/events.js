@@ -28,11 +28,39 @@ const destinationsConfig = {
 };
 
 // Function to send events to destinations
-function sendEvents(eventData, destination) {
-  destinations.forEach((destination) => {
-    //TODO Implement logic to send events (e.g., using HTTP requests)
-    console.log(`Sending event to ${destination}`);
-  });
+async function sendEvents(payload, destinationsSelectedForRouting) {
+  const destinationsList =  destinationsConfig.destinations;
+  const result = {};
+
+  for (const [key, value] of Object.entries(destinationsSelectedForRouting)) {
+    const destination = destinationsList.find(destination => destination.name === key);
+
+    if (value && destination.transport === 'http.post') {
+      try {
+        console.log(`Triggering HTTP POST for ${destination.name} at ${destination.url} sent ${payload}`);
+        result[key] = true;
+      } catch (error) {
+        result[key] = false;
+      }
+    } else if (value && destination.transport === 'http.get') {
+      try {
+        console.log(`Triggering HTTP GET for ${destination.name} at ${destination.url} sent ${payload}`);
+        result[key] = true;
+      } catch (error) {
+        result[key] = false;
+      }
+    } else if (value && destination.transport === 'console.log') {
+      console.log(`Logging for ${destination.name}, event data: ${payload}`);
+      result[key] = true;
+    } else if (value && destination.transport === 'console.warn') {
+      console.warn(`Warning for ${destination.name}, event data: ${payload}`);
+      result[key] = true;
+    } else if (!value) {
+      result[key] = false;
+    }
+  }
+
+  return result;
 }
 
 function getUniqueDestinations(possibleDestinations) {
@@ -133,7 +161,7 @@ function selectDestinationsForRouting(uniqueDestinations, routingStrategy) {
 }
 
 // Protected route
-router.get('/', verifyToken, (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
 
   const payload = req.body.payload;
 
@@ -144,13 +172,10 @@ router.get('/', verifyToken, (req, res) => {
   const possibleDestinations = req.body.possibleDestinations;
   const uniqueDestinations = getUniqueDestinations(possibleDestinations);
   const destinationsSelectedForRouting = selectDestinationsForRouting(uniqueDestinations, routingStrategy);
-  console.log("==========================================")
-  console.log(destinationsSelectedForRouting)
-  console.log("==========================================")
    // Send events to destinations
-  sendEvents(payload, destinations);
+  const result = await sendEvents(payload, destinationsSelectedForRouting);
 
-  res.status(200).json('Event received successfully.');
+  res.status(200).json(result);
 });
 
 module.exports = router;
