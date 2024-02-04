@@ -161,7 +161,7 @@ function selectDestinationsForRouting(uniqueDestinations, routingStrategy) {
 }
 
 // Protected route
-router.get('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
 
   const payload = req.body.payload;
 
