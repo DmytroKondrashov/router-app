@@ -1,7 +1,6 @@
 const Log = require('../models/log');
 
 const logMiddleware = async (req, res, next) => {
-  console.log('MIDDLEWARE TRIGGERED!')
   const log = new Log({
     method: req.method,
     path: req.path,
