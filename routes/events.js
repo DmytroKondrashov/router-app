@@ -54,11 +54,11 @@ async function sendEvents(payload, destinationsSelectedForRouting) {
       }
 
     } else if (value && destination.transport === 'console.log') {
-      console.log(`Logging for ${destination.name}, event data: ${payload}`);
+      console.log(`Logging for ${destination.name}, event data: ${JSON.stringify(payload, null, 2)}`);
       result[key] = true;
 
     } else if (value && destination.transport === 'console.warn') {
-      console.warn(`Warning for ${destination.name}, event data: ${payload}`);
+      console.warn(`Warning for ${destination.name}, event data: ${JSON.stringify(payload, null, 2)}`);
       result[key] = true;
 
     } else if (!value) {
