@@ -116,72 +116,80 @@ function parseStrategyFunctionString(routingStrategy) {
 function selectDestinationsForRouting(uniqueDestinations, routingStrategy) {
   const destinationsForRouting = {};
 
-  switch (routingStrategy) {
-    case "ALL":
-      uniqueDestinations.forEach((destination) => {
-        Object.entries(destination).forEach(([key, value]) => {
-          let falseIntents = 0;
-          value.forEach(el => {
-            if (el == false) {
-              falseIntents += 1;
+  try {
+    switch (routingStrategy) {
+      case "ALL":
+        uniqueDestinations.forEach((destination) => {
+          Object.entries(destination).forEach(([key, value]) => {
+            let falseIntents = 0;
+            value.forEach(el => {
+              if (el == false) {
+                falseIntents += 1;
+              }
+            })
+            if (falseIntents === 0 && !destinationsForRouting[key]) {
+              destinationsForRouting[key] = true;
             }
-          })
-          if (falseIntents === 0 && !destinationsForRouting[key]) {
-            destinationsForRouting[key] = true;
-          }
-          if (falseIntents > 0 && !destinationsForRouting[key]) {
-            destinationsForRouting[key] = false;
-          }
-        });
-      });
-      return destinationsForRouting;
-    
-    case "ANY":
-      uniqueDestinations.forEach((destination) => {
-        let trueIntents = 0;
-        Object.entries(destination).forEach(([key, value]) => {
-          value.forEach(el => {
-            if (el == true) {
-              trueIntents += 1;
+            if (falseIntents > 0 && !destinationsForRouting[key]) {
+              destinationsForRouting[key] = false;
             }
-          })
-          if (trueIntents > 0 && !destinationsForRouting[key]) {
-            destinationsForRouting[key] = true;
-          }
-          if (trueIntents < 1 && !destinationsForRouting[key]) {
-            destinationsForRouting[key] = false;
-          }
+          });
         });
-      });
-      return destinationsForRouting;
-
-    default:
-      const strategyFunction = parseStrategyFunctionString(routingStrategy);
-      const strategyFunctionResult = strategyFunction();
-      if (strategyFunctionResult != true && strategyFunctionResult != false) {
-        throw new Error('Please provide a function that retrurns a boolean value');
-      }
-      uniqueDestinations.forEach((obj) => {
-        const key = Object.keys(obj)[0];
-        if (!destinationsForRouting[key]) {
-          destinationsForRouting[key] = strategyFunctionResult;
+        return destinationsForRouting;
+      
+      case "ANY":
+        uniqueDestinations.forEach((destination) => {
+          let trueIntents = 0;
+          Object.entries(destination).forEach(([key, value]) => {
+            value.forEach(el => {
+              if (el == true) {
+                trueIntents += 1;
+              }
+            })
+            if (trueIntents > 0 && !destinationsForRouting[key]) {
+              destinationsForRouting[key] = true;
+            }
+            if (trueIntents < 1 && !destinationsForRouting[key]) {
+              destinationsForRouting[key] = false;
+            }
+          });
+        });
+        return destinationsForRouting;
+  
+      default:
+        const strategyFunction = parseStrategyFunctionString(routingStrategy);
+        const strategyFunctionResult = strategyFunction();
+        if (strategyFunctionResult != true && strategyFunctionResult != false) {
+          throw new Error('Please provide a function that retrurns a boolean value');
         }
-      })
-      return destinationsForRouting;
+        uniqueDestinations.forEach((obj) => {
+          const key = Object.keys(obj)[0];
+          if (!destinationsForRouting[key]) {
+            destinationsForRouting[key] = strategyFunctionResult;
+          }
+        })
+        return destinationsForRouting;
+    }
+  } catch (error) {
+    throw error;
   }
 }
 
 // Route for sending the event request to
-router.post('/', verifyToken, validateEventsMiddleware, async (req, res) => {
-  const payload = req.body.payload;
-  const routingStrategy = req.body.strategy || destinationsConfig.strategy;
-  const possibleDestinations = req.body.possibleDestinations;
-
-  const uniqueDestinations = getUniqueDestinations(possibleDestinations);
-  const destinationsSelectedForRouting = selectDestinationsForRouting(uniqueDestinations, routingStrategy);
-  const result = await sendEvents(payload, destinationsSelectedForRouting);
-
-  res.status(200).json(result);
+router.post('/', verifyToken, validateEventsMiddleware, async (req, res, next) => {
+  try {
+    const payload = req.body.payload;
+    const routingStrategy = req.body.strategy || destinationsConfig.strategy;
+    const possibleDestinations = req.body.possibleDestinations;
+  
+    const uniqueDestinations = getUniqueDestinations(possibleDestinations);
+    const destinationsSelectedForRouting = selectDestinationsForRouting(uniqueDestinations, routingStrategy);
+    const result = await sendEvents(payload, destinationsSelectedForRouting);
+  
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
 });
 
 module.exports = router;
