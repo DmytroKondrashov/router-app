@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middleware/authMiddleware');
 const validateEventsMiddleware = require('../middleware/validateEventsMiddleware')
+const axios = require('axios');
 
 // Sample destinations config
 const destinationsConfig = {
@@ -10,12 +11,12 @@ const destinationsConfig = {
     {
       name: 'destination1',
       transport: 'http.post',
-      url: 'https://example.com/destination1',
+      url: 'http://localhost:3000/destinations/destination1',
     },
     {
       name: 'destination2',
-      transport: 'http.post',
-      url: 'https://example2.com/destination2',
+      transport: 'http.get',
+      url: 'http://localhost:3000/destinations/destination2',
     },
     {
       name: 'destination3',
@@ -38,24 +39,28 @@ async function sendEvents(payload, destinationsSelectedForRouting) {
 
     if (value && destination.transport === 'http.post') {
       try {
-        console.log(`Triggering HTTP POST for ${destination.name} at ${destination.url} sent ${payload}`);
+        await axios.post(destination.url, payload);
         result[key] = true;
       } catch (error) {
         result[key] = false;
       }
+
     } else if (value && destination.transport === 'http.get') {
       try {
-        console.log(`Triggering HTTP GET for ${destination.name} at ${destination.url} sent ${payload}`);
-        result[key] = true;
+        await axios.get(destination.url, payload);
+      result[key] = true;
       } catch (error) {
         result[key] = false;
       }
+
     } else if (value && destination.transport === 'console.log') {
       console.log(`Logging for ${destination.name}, event data: ${payload}`);
       result[key] = true;
+
     } else if (value && destination.transport === 'console.warn') {
       console.warn(`Warning for ${destination.name}, event data: ${payload}`);
       result[key] = true;
+
     } else if (!value) {
       result[key] = false;
     }
@@ -127,9 +132,8 @@ function selectDestinationsForRouting(uniqueDestinations, routingStrategy) {
     
     case "ANY":
       uniqueDestinations.forEach((destination) => {
-        console.log(destination)
+        let trueIntents = 0;
         Object.entries(destination).forEach(([key, value]) => {
-          let trueIntents = 0;
           value.forEach(el => {
             if (el == true) {
               trueIntents += 1;
