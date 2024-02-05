@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-function validateLoginMiddleware(req, res, next) {
+function validateAuthMiddleware(req, res, next) {
   const schema = Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
@@ -15,4 +15,4 @@ function validateLoginMiddleware(req, res, next) {
   next();
 }
 
-module.exports = validateLoginMiddleware;
+module.exports = validateAuthMiddleware;
