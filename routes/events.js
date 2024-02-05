@@ -31,59 +31,47 @@ const destinationsConfig = {
 
 // Send events to destinations
 async function sendEvents(payload, destinationsSelectedForRouting) {
-  const destinationsList =  destinationsConfig.destinations;
+  const destinationsList = destinationsConfig.destinations;
   const result = {};
 
   for (const [key, value] of Object.entries(destinationsSelectedForRouting)) {
-    const destination = destinationsList.find(destination => destination.name === key);
+    const destination = destinationsList.find(dest => dest.name === key);
 
-    if (value && destination.transport === 'http.post') {
+    if (value) {
       try {
-        await axios.post(destination.url, payload);
+        switch (destination.transport) {
+          case 'http.post':
+          case 'http.get':
+          case 'http.put':
+          case 'http.delete':
+            await axios[destination.transport](destination.url, payload);
+            break;
+
+          case 'console.log':
+            console.log(`Logging for ${destination.name}, event data: ${JSON.stringify(payload, null, 2)}`);
+            break;
+
+          case 'console.warn':
+            console.warn(`Warning for ${destination.name}, event data: ${JSON.stringify(payload, null, 2)}`);
+            break;
+
+          default:
+            result[key] = false; // Unsupported transport type
+            continue;
+        }
+
         result[key] = true;
       } catch (error) {
         result[key] = false;
       }
-
-    } else if (value && destination.transport === 'http.get') {
-      try {
-        await axios.get(destination.url, payload);
-      result[key] = true;
-      } catch (error) {
-        result[key] = false;
-      }
-
-    } else if (value && destination.transport === 'http.put') {
-      try {
-        await axios.put(destination.url, payload);
-      result[key] = true;
-      } catch (error) {
-        result[key] = false;
-      }
-
-    } else if (value && destination.transport === 'http.delete') {
-      try {
-        await axios.delete(destination.url, payload);
-      result[key] = true;
-      } catch (error) {
-        result[key] = false;
-      }
-
-    } else if (value && destination.transport === 'console.log') {
-      console.log(`Logging for ${destination.name}, event data: ${JSON.stringify(payload, null, 2)}`);
-      result[key] = true;
-
-    } else if (value && destination.transport === 'console.warn') {
-      console.warn(`Warning for ${destination.name}, event data: ${JSON.stringify(payload, null, 2)}`);
-      result[key] = true;
-
-    } else if (!value) {
+    } else {
       result[key] = false;
     }
   }
 
   return result;
 }
+
 
 // Get a ist of unique destinations from the request
 function getUniqueDestinations(possibleDestinations) {
@@ -93,7 +81,7 @@ function getUniqueDestinations(possibleDestinations) {
     Object.entries(destination).forEach(([key, value]) => {
       const existingKey = uniqueDestinations.find((pair) => Object.keys(pair)[0] === key);
 
-      if (!existingKey ) {
+      if (!existingKey) {
         uniqueDestinations.push({ [key]: [value] });
       } else {
         const element = uniqueDestinations.find(obj => key in obj);
