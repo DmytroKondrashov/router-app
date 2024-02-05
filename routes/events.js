@@ -53,6 +53,22 @@ async function sendEvents(payload, destinationsSelectedForRouting) {
         result[key] = false;
       }
 
+    } else if (value && destination.transport === 'http.put') {
+      try {
+        await axios.put(destination.url, payload);
+      result[key] = true;
+      } catch (error) {
+        result[key] = false;
+      }
+
+    } else if (value && destination.transport === 'http.delete') {
+      try {
+        await axios.delete(destination.url, payload);
+      result[key] = true;
+      } catch (error) {
+        result[key] = false;
+      }
+
     } else if (value && destination.transport === 'console.log') {
       console.log(`Logging for ${destination.name}, event data: ${JSON.stringify(payload, null, 2)}`);
       result[key] = true;
