@@ -44,7 +44,7 @@ async function sendEvents(payload, destinationsSelectedForRouting) {
           case 'http.get':
           case 'http.put':
           case 'http.delete':
-            await axios[destination.transport](destination.url, payload);
+            await axios[destination.transport.replace(/^http\./, '')](destination.url, payload);
             break;
 
           case 'console.log':
