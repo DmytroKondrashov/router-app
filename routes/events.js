@@ -29,7 +29,7 @@ const destinationsConfig = {
   ]
 };
 
-// Function to send events to destinations
+// Send events to destinations
 async function sendEvents(payload, destinationsSelectedForRouting) {
   const destinationsList =  destinationsConfig.destinations;
   const result = {};
@@ -85,12 +85,12 @@ async function sendEvents(payload, destinationsSelectedForRouting) {
   return result;
 }
 
+// Get a ist of unique destinations from the request
 function getUniqueDestinations(possibleDestinations) {
   const uniqueDestinations = [];
 
   possibleDestinations.forEach((destination) => {
     Object.entries(destination).forEach(([key, value]) => {
-      // Check if the key already exists in uniqueDestinations
       const existingKey = uniqueDestinations.find((pair) => Object.keys(pair)[0] === key);
 
       if (!existingKey ) {
@@ -105,6 +105,7 @@ function getUniqueDestinations(possibleDestinations) {
   return uniqueDestinations;
 }
 
+// Parse custom strategy from string to function
 function parseStrategyFunctionString(routingStrategy) {
   const match = routingStrategy.match(/^function\s*\(([^)]*)\)\s*{\s*([\s\S]*)\s*}$/);
 
@@ -123,6 +124,7 @@ function parseStrategyFunctionString(routingStrategy) {
   return new Function(args, body);
 }
 
+// Define if a sequest should be routed to specific destination
 function selectDestinationsForRouting(uniqueDestinations, routingStrategy) {
   const destinationsForRouting = {};
 
@@ -181,19 +183,14 @@ function selectDestinationsForRouting(uniqueDestinations, routingStrategy) {
   }
 }
 
-// Protected route
+// Route for sending the event request to
 router.post('/', verifyToken, validateEventsMiddleware, async (req, res) => {
-
   const payload = req.body.payload;
-
-  // Determine routing strategy
   const routingStrategy = req.body.strategy || destinationsConfig.strategy;
-
-  // Determine destinations based on strategy
   const possibleDestinations = req.body.possibleDestinations;
+
   const uniqueDestinations = getUniqueDestinations(possibleDestinations);
   const destinationsSelectedForRouting = selectDestinationsForRouting(uniqueDestinations, routingStrategy);
-   // Send events to destinations
   const result = await sendEvents(payload, destinationsSelectedForRouting);
 
   res.status(200).json(result);
