@@ -1,6 +1,5 @@
 version: '3'
 services:
-  # Node.js app service
   app:
     build:
       context: .
@@ -12,12 +11,9 @@ services:
     depends_on:
       - mongo
 
-  # MongoDB service
   mongo:
     image: mongo
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
-      - MONGO_INITDB_DATABASE=mydatabase
+      - DEV_MONGODB_URI=mongodb://mongo:27017/router-app
