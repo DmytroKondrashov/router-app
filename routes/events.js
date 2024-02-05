@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middleware/authMiddleware');
+const validateEventsMiddleware = require('../middleware/validateEventsMiddleware')
 
 // Sample destinations config
 const destinationsConfig = {
@@ -161,7 +162,7 @@ function selectDestinationsForRouting(uniqueDestinations, routingStrategy) {
 }
 
 // Protected route
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, validateEventsMiddleware, async (req, res) => {
 
   const payload = req.body.payload;
 
