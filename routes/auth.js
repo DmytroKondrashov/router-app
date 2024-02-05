@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const validateLoginMiddleware = require('../middleware/validateLoginMiddleware')
 
 // User registration
 router.post('/register', async (req, res) => {
@@ -18,7 +19,7 @@ router.post('/register', async (req, res) => {
 });
 
 // User login
-router.post('/login', async (req, res) => {
+router.post('/login', validateLoginMiddleware, async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
