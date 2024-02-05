@@ -7,7 +7,6 @@
 var app = require('../app');
 var debug = require('debug')('router-app:server');
 var http = require('http');
-const expressListEndpoints = require('express-list-endpoints');
 const mongoose = require('mongoose');
 
 /**
@@ -94,5 +93,4 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
   main().catch(err => console.log(err));
-  // console.log(expressListEndpoints(app));
 }
